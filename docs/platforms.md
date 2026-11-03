@@ -84,3 +84,15 @@ If tests fail to create fixtures, point `TEMP` and `TMP` at a directory inside t
 CUDA 13.2 and later ship CCCL headers that `#error` under cl.exe's traditional preprocessor (C1189); the
 CMakeLists hands `/Zc:preprocessor` to nvcc's host compiler, verified on CUDA 13.4 and MSVC 19.44.
 Anything compiling these headers outside this CMakeLists needs the same flag.
+
+## Container image
+
+`Dockerfile` builds the engine, the Python server and its venv on an NVIDIA CUDA 13 runtime base,
+and the `docker` workflow publishes the result as the `basalt` package in the repository owner's
+ghcr.io namespace on every push to `main`. The image is Linux; Windows runs natively. Building it
+needs no GPU: the engine is compiled for sm_120 with no device present. The card reaches the
+running container through the NVIDIA container runtime. The image ships no model: the model packs
+and `basalt_config.json` come from mounts, and the server unpacks the pack's tokenizer and vision
+files and keeps its conversation disk tier under its cache root (`$HOME/.cache/basalt`), which the
+image pins to a mount with `HOME`. The tree stays at the path it was compiled in because the binary
+reads `data/profiles/` from there.
